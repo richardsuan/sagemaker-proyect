@@ -1,82 +1,179 @@
-Dog Breed Classification with PyTorch and AWS SageMaker
-This project implements a Deep Learning model using ResNet50 to classify dog breeds. It is designed to run efficiently on AWS SageMaker, utilizing Hyperparameter Tuning (HPO), Debugging, and Profiling tools.
+# 🐶 Dog Breed Classification with PyTorch & SageMaker
 
-1. Environment Setup
-To run this project locally or in a SageMaker Notebook instance, follow these steps to set up a clean Python environment:
+Deep Learning project using **Transfer Learning with ResNet50**, optimized through **Hyperparameter Tuning (HPO)** on AWS SageMaker, including Debugger and Profiler integration.
 
-Create a Virtual Environment
-Bash
+---
 
-# Create the environment
+## 📌 Project Overview
+
+This project implements a CNN-based image classification pipeline for dog breed recognition using:
+
+* **PyTorch**
+* **Pretrained ResNet50 (ImageNet)**
+* **AWS SageMaker**
+* Hyperparameter Optimization (HPO)
+* SageMaker Debugger & Profiler
+
+The final model achieved:
+
+> 🎯 **89.58% Validation Accuracy**
+
+---
+
+# ⚙️ Environment Setup
+
+## 1️⃣ Create Virtual Environment
+
+```bash
 python3 -m venv dog_proj_env
-
-# Activate the environment
-# On Linux/macOS:
 source dog_proj_env/bin/activate
+```
 
+---
 
-2. Install Dependencies
-Install the required libraries using pip:
+## 2️⃣ Install Dependencies
 
-Bash
-
+```bash
 pip install torch torchvision numpy Pillow smdebug sagemaker pandas matplotlib
+```
 
-3. Download dataset:
-Bash
-#TODO: Fetch and upload the data to AWS S3
+---
+
+## 3️⃣ Download Dataset
+
+```bash
 wget https://s3-us-west-1.amazonaws.com/udacity-aind/dog-project/dogImages.zip
 unzip dogImages.zip
+```
 
-4. Script Overview: train_model.py
-The training script is optimized for the Amazon SageMaker PyTorch Container. Here is how the core components work:
+Upload the dataset to S3 before training in SageMaker.
 
-Model Architecture (net function)
-The model uses a Pre-trained ResNet50 (IMAGENET1K_V2).
+---
 
-Feature Extraction: Most layers are frozen to leverage pre-trained weights.
+# 🧠 Model Architecture
 
-Fine-tuning: We specifically unfreeze layer4 and the fully connected (fc) layer to adapt the model to the specific features of dog breeds.
+### 🔹 Base Model
 
-Output: The final linear layer is resized to match the number of classes in your dataset.
+* **ResNet50 (IMAGENET1K_V2)**
+* Pretrained on ImageNet
 
-Data Loading (create_data_loaders)
-Preprocessing: Images are resized to 224x224 pixels to ensure compatibility with ResNet.
+### 🔹 Transfer Learning Strategy
 
-Augmentation: Training data includes random horizontal flips to improve generalization.
+* All early convolutional layers frozen
+* `layer4` unfrozen for domain adaptation
+* Fully Connected (`fc`) layer replaced to match dataset classes
 
-Normalization: Uses ImageNet standard mean and deviation: [0.485, 0.456, 0.406] and [0.229, 0.224, 0.225].
+### 🔹 Input Pipeline
 
-Debugging & Profiling (smdebug)
-The script integrates the SageMaker Debugger Hook. This allows SageMaker to:
+* Resize to 224x224
+* Random horizontal flips (training only)
+* ImageNet normalization:
 
-Monitor the CrossEntropyLoss in real-time.
+  * Mean: `[0.485, 0.456, 0.406]`
+  * Std: `[0.229, 0.224, 0.225]`
 
-Capture hardware utilization (CPU/GPU) via the Profiler.
+---
 
-Trigger alerts if the loss is not decreasing.
+# 🐞 Debugging & Profiling (SageMaker)
 
-5. Training the Model
-Running Locally (for testing)
-If you have the data structured in a /data folder locally, you can run:
+Integrated with **smdebug** to:
 
-Bash
+* Monitor `CrossEntropyLoss`
+* Track GPU/CPU utilization
+* Detect non-decreasing loss patterns
+* Profile hardware performance
 
+---
+
+# 🚀 Hyperparameter Optimization
+
+The model was optimized using **SageMaker HPO**, exploring:
+
+* Learning rate (`lr`)
+* Batch size (`batch_size`)
+
+### 🔎 Tuning Jobs Overview
+
+![Tuning Jobs](image/tunning_jobs.png)
+
+---
+
+## 📊 Top 10 Models – Accuracy Comparison
+
+![Model Accuracy Comparison](image/models.png)
+
+---
+
+## 📋 Hyperparameter Results
+
+| Model        | Accuracy     | Batch Size | Learning Rate | Time (s) |
+| ------------ | ------------ | ---------- | ------------- | -------- |
+| **Modelo 1** | **0.895808** | **58**     | **7.42e-05**  | **4653** |
+| Modelo 2     | 0.886228     | 45         | 5.90e-05      | 4244     |
+| Modelo 3     | 0.885030     | 33         | 7.10e-05      | 4393     |
+| Modelo 4     | 0.885030     | 64         | 1.02e-04      | 4498     |
+| Modelo 5     | 0.880240     | 61         | 1.35e-04      | 4302     |
+| Modelo 6     | 0.880240     | 57         | 5.80e-05      | 4258     |
+| Modelo 7     | 0.879042     | 24         | 3.50e-05      | 4452     |
+| Modelo 8     | 0.871856     | 16         | 1.02e-04      | 4168     |
+| Modelo 9     | 0.869461     | 16         | 7.30e-05      | 4222     |
+| Modelo 10    | 0.778443     | 35         | 7.80e-03      | 4388     |
+
+---
+
+# 🏆 Best Model
+
+```
+Validation Accuracy: 0.895808
+Batch Size: 58
+Learning Rate: 7.4278e-05
+Training Time: 4653 seconds
+Training Job: pytorch-training-260216-0207-002-4c761cbf
+```
+
+🎯 **Final Accuracy: 89.58%**
+
+---
+
+# 🐕 Inference Test – Real-World Image
+
+After deployment to a SageMaker endpoint, the model was tested using an external Doberman image.
+
+![Inference Test – Doberman](image/test_dog.png)
+
+✅ The model correctly classified the image as **Doberman**.
+
+This confirms:
+
+* Effective fine-tuning
+* Robust feature extraction
+* Strong generalization capability
+
+---
+
+# ▶️ Training
+
+## Run Locally
+
+```bash
 export SM_CHANNEL_TRAIN="./data"
 export SM_MODEL_DIR="./model_output"
+
 python train_model.py --batch_size 32 --epochs 5 --lr 0.001
-Running on AWS SageMaker
-To execute this script on SageMaker, use the PyTorch Estimator in your Jupyter Notebook:
+```
 
-Python
+---
 
+## Run on SageMaker
+
+```python
 from sagemaker.pytorch import PyTorch
 
 estimator = PyTorch(
     entry_point='train_model.py',
     role=role,
     instance_count=1,
-    instance_type='ml.m5.xlarge', # Or ml.g4dn.xlarge for GPU
+    instance_type='ml.g4dn.xlarge',
     framework_version='2.0',
     py_version='py310',
     hyperparameters={
@@ -87,153 +184,50 @@ estimator = PyTorch(
 )
 
 estimator.fit({'train': 's3://your-bucket/dog-project/'})
-6. Key Metrics
-During execution, the script prints logs in a format that SageMaker HPO Tuner can parse:
+```
 
+---
+
+# 📈 Logged Metrics
+
+The script outputs metrics in SageMaker-compatible format:
+
+```
 validation:accuracy=<value>
-
 test:accuracy=<value>
-
-The final trained model weights are saved as model.pth in the specified S3 output path.
-
-# 🐶 Dog Breed Classification with ResNet50 & SageMaker HPO
-
-This project demonstrates the implementation of **Transfer Learning** using **ResNet50** for dog breed classification, optimized through **Hyperparameter Tuning (HPO)** on **AWS SageMaker**.
-
----
-
-# 🚀 Model Training & Hyperparameter Optimization
-
-To identify the most accurate and efficient configuration, I executed multiple **Hyperparameter Optimization (HPO)** jobs in SageMaker.
-
-The tuning process explored different combinations of:
-
-* Learning rate (`lr`)
-* Batch size (`batch_size`)
-
-The objective metric used for optimization was **validation accuracy**.
-
----
-
-## 🔎 Tuning Jobs Overview
-
-The following figure shows the SageMaker tuning jobs executed during the optimization process:
-
-![Tuning Jobs](./image/tunning_jobs.png)
-
-Each tuning job evaluated multiple training configurations to maximize validation accuracy.
-
----
-
-## 📊 Accuracy Distribution – Top 10 Models
-
-The next visualization presents the validation accuracy of the top 10 models identified during the tuning phase:
-
-![Model Accuracy Comparison](./image/models.png)
-
-This comparison allowed a clear performance ranking and facilitated the selection of the best candidate for deployment.
-
----
-
-## 📋 Hyperparameter Results Table
-
-Below is the detailed summary of the top 10 training jobs:
-
-| Model        | Validation Accuracy | Batch Size | Learning Rate | Training Time (s) | Status    |
-| ------------ | ------------------- | ---------- | ------------- | ----------------- | --------- |
-| **Modelo 1** | **0.895808**        | **58**     | **7.42e-05**  | **4653**          | Completed |
-| Modelo 2     | 0.886228            | 45         | 5.90e-05      | 4244              | Completed |
-| Modelo 3     | 0.885030            | 33         | 7.10e-05      | 4393              | Completed |
-| Modelo 4     | 0.885030            | 64         | 1.02e-04      | 4498              | Completed |
-| Modelo 5     | 0.880240            | 61         | 1.35e-04      | 4302              | Completed |
-| Modelo 6     | 0.880240            | 57         | 5.80e-05      | 4258              | Completed |
-| Modelo 7     | 0.879042            | 24         | 3.50e-05      | 4452              | Completed |
-| Modelo 8     | 0.871856            | 16         | 1.02e-04      | 4168              | Completed |
-| Modelo 9     | 0.869461            | 16         | 7.30e-05      | 4222              | Completed |
-| Modelo 10    | 0.778443            | 35         | 7.80e-03      | 4388              | Completed |
-
----
-
-# 🏆 Best Model Identified
-
-After analyzing all tuning results, the optimal configuration was:
-
-```
-**************************************************
-🏆 BEST MODEL FOUND
-**************************************************
-Friendly Name: Modelo 1
-AWS Training Job Name: pytorch-training-260216-0207-002-4c761cbf
-Validation Accuracy: 0.8958083987236023
---------------------------------------------------
-Winning Hyperparameters:
-  • batch_size: 58
-  • lr: 7.427819487655537e-05
-  • TrainingElapsedTimeSeconds: 4653
-**************************************************
 ```
 
-### 🎯 Final Validation Accuracy: **89.58%**
+Final model artifact:
 
-This configuration achieved the highest validation accuracy while maintaining stable convergence behavior.
+```
+model.pth
+```
 
----
-
-# 🐕 Real-World Inference Test
-
-After selecting the best model, it was deployed to a SageMaker endpoint for inference testing.
-
-To validate real-world generalization capability, I used an external image of a **Doberman** obtained from the internet.
-
-![Inference Test – Doberman](./image/test_dog.png)
-
-### ✅ Result:
-
-The model successfully classified the image as a **Doberman breed**, confirming:
-
-* Proper feature extraction from ResNet50
-* Effective fine-tuning
-* Good generalization to unseen data
-
----
-
-# 🧠 Technical Approach
-
-* Base Architecture: **ResNet50 (Pretrained on ImageNet)**
-* Transfer Learning Strategy:
-
-  * Frozen base layers
-  * Fine-tuned final classification layers
-* Optimization:
-
-  * Hyperparameter Tuning with SageMaker HPO
-  * Objective metric: Validation Accuracy
-* Deployment:
-
-  * SageMaker Endpoint for real-time inference
+Stored in the S3 output path.
 
 ---
 
 # 🏁 Conclusion
 
-This project demonstrates the effectiveness of **Transfer Learning** using ResNet50 for specialized classification tasks such as dog breed recognition.
+This project demonstrates:
 
-Through systematic **Hyperparameter Optimization**, the model achieved a validation accuracy of **89.58%**, confirming that pretrained CNN architectures provide a strong foundation even for domain-specific datasets.
+* Effective Transfer Learning
+* Systematic Hyperparameter Optimization
+* Production-ready SageMaker integration
+* Real-world inference validation
 
-The integration with AWS SageMaker enabled:
-
-* Automated hyperparameter exploration
-* Objective model selection
-* Efficient training resource monitoring
+Final performance reached **89.58% validation accuracy**, proving that pretrained CNN architectures provide strong baselines for domain-specific classification tasks.
 
 ---
 
 # 🚀 Future Improvements
 
-To further enhance performance and scalability:
+* Vision Transformers (ViT) benchmarking
+* EfficientNet comparison
+* Advanced augmentation (CutMix, MixUp)
+* Quantization & pruning
+* ONNX/TFLite export for edge deployment
 
-* **Dataset Expansion:** Increase intra-class variability (lighting, angles, backgrounds).
-* **Advanced Architectures:** Benchmark against Vision Transformers (ViT) and EfficientNet.
-* **Advanced Data Augmentation:** Implement CutMix, MixUp, or AutoAugment.
-* **Edge Deployment:** Export to ONNX or TFLite for mobile and embedded inference.
-* **Model Compression:** Apply pruning or quantization to reduce latency.
+---
+
+
