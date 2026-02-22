@@ -9,8 +9,8 @@ import os
 # CONFIG
 # -------------------------
 MODEL_PATH = "model.pth"
-TRAIN_DIR = "dogImages/train"  # solo para recuperar class names
-IMAGE_PATH = sys.argv[1]       # imagen a evaluar
+TRAIN_DIR = "dogImages/train"
+IMAGE_PATH = sys.argv[1]
 DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 # -------------------------  dogImages/valid/001.Affenpinscher/Affenpinscher_00038.jpg
